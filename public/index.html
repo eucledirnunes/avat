@@ -3,176 +3,333 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plataforma de Avatares</title>
+<title>Studio de Avatares</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #fff; --text: #16181d; --muted: #6b7280; --line: #e3e6ea;
-    --accent: #5b3df5; --accent-text: #fff; --ok: #0f9d58; --warn: #b7791f; --err: #d93025;
+    --bg: #f4f5f8; --surface: #ffffff; --surface-2: #f0f1f5; --text: #14161c; --muted: #667085;
+    --line: #e2e5ec; --brand: #5b3df5; --brand-soft: #ece8ff; --brand-text: #ffffff;
+    --ok: #0b8a4d; --ok-soft: #e3f6ec; --warn: #a15c07; --warn-soft: #fdf0d9; --err: #c62828; --err-soft: #fde8e8;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 4px 16px rgba(16,24,40,.04);
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #0f1115; --card: #181b21; --text: #eceef2; --muted: #9aa1ad; --line: #2a2e37; --accent: #7c66ff; }
+    :root {
+      --bg: #0d0f14; --surface: #161922; --surface-2: #1e222d; --text: #eef0f5; --muted: #98a0b3;
+      --line: #2a2f3c; --brand: #8a76ff; --brand-soft: #262046; --brand-text: #0d0f14;
+      --ok: #4cd190; --ok-soft: #12291e; --warn: #f0b34a; --warn-soft: #2e2410; --err: #ff7b7b; --err-soft: #331617;
+      --shadow: none;
+    }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
-  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
-    padding: 16px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
-  h1 { font-size: 18px; margin: 0; }
-  .balance { font-weight: 600; }
-  .balance span { color: var(--accent); }
-  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 20px; }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
-  h2 { font-size: 16px; margin: 0 0 14px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
-  input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px;
-    background: var(--bg); color: var(--text); font: inherit; }
-  textarea { min-height: 180px; resize: vertical; }
-  button { padding: 9px 16px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-text);
-    font: inherit; font-weight: 600; cursor: pointer; }
-  button:disabled { opacity: .5; cursor: default; }
-  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
-  .avatars { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-  .avatar { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .avatar .thumb { aspect-ratio: 1; border-radius: 8px; background: var(--bg); display: grid; place-items: center;
-    color: var(--muted); font-size: 32px; margin-bottom: 8px; overflow: hidden; }
-  .avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .muted { color: var(--muted); font-size: 13px; }
-  .hint { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 13px; color: var(--muted); }
-  .video { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--line); }
-  .video:first-child { border-top: 0; }
-  .badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; border: 1px solid currentColor; }
-  .processing { color: var(--warn); } .completed { color: var(--ok); } .failed { color: var(--err); }
-  video { grid-column: 1 / -1; max-width: 260px; border-radius: 10px; background: #000; }
-  .script { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #msg { min-height: 20px; margin-top: 10px; font-size: 14px; }
-  #msg.err { color: var(--err); } #msg.ok { color: var(--ok); }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button, input, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .topbar { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .topbar-in { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }
+  .logo { width: 30px; height: 30px; border-radius: 9px; background: var(--brand); color: var(--brand-text); display: grid; place-items: center; font-size: 16px; }
+  .pill { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 99px; background: var(--brand-soft); font-weight: 600; }
+  .pill b { color: var(--brand); font-size: 17px; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 120px; display: grid; gap: 24px; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; padding-bottom: 140px; } }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); }
+  .card + .card { margin-top: 16px; }
+  .step { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+  .step i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; background: var(--brand); color: var(--brand-text); font-size: 13px; display: grid; place-items: center; }
+  .sub { margin: 0 0 16px 34px; color: var(--muted); font-size: 13px; }
+
+  .avatars { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; }
+  .av { position: relative; text-align: left; padding: 8px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; }
+  .av:hover { border-color: var(--muted); }
+  .av[aria-checked="true"] { border-color: var(--brand); background: var(--brand-soft); }
+  .av .ph { aspect-ratio: 3/4; border-radius: 9px; background: var(--surface-2); display: grid; place-items: center; font-size: 34px; overflow: hidden; }
+  .av .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .av .nm { margin-top: 8px; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .av .tick { position: absolute; top: 14px; right: 14px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: var(--brand-text); display: none; place-items: center; font-size: 13px; }
+  .av[aria-checked="true"] .tick { display: grid; }
+  .add { display: grid; place-items: center; align-content: center; gap: 6px; min-height: 168px; border: 2px dashed var(--line); border-radius: 14px; background: transparent; color: var(--muted); cursor: pointer; font-weight: 600; }
+  .add:hover { border-color: var(--brand); color: var(--brand); }
+  .add span { font-size: 28px; line-height: 1; }
+  .empty { grid-column: 1 / -1; padding: 6px 2px 2px; color: var(--muted); font-size: 14px; }
+
+  textarea { width: 100%; min-height: 220px; resize: vertical; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); line-height: 1.6; }
+  textarea::placeholder { color: var(--muted); }
+  .meter { height: 6px; border-radius: 99px; background: var(--surface-2); margin: 12px 0 8px; overflow: hidden; }
+  .meter > div { height: 100%; width: 0; border-radius: 99px; background: var(--ok); transition: width .2s, background .2s; }
+  .meter.over > div { background: var(--warn); }
+  .stats { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .stats b { color: var(--text); }
+  .chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .chip { padding: 5px 12px; border-radius: 99px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .chip:hover { color: var(--text); border-color: var(--muted); }
+
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; }
+  .opt[aria-checked="true"] { border-color: var(--brand); background: var(--brand-soft); }
+  .shape { border: 2px solid currentColor; border-radius: 4px; flex: none; }
+  .opt small { display: block; color: var(--muted); font-weight: 400; }
+  .opt strong { display: block; }
+
+  .vlist { display: grid; gap: 14px; }
+  .vid { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: var(--surface-2); }
+  .vhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+  .badge.processing { color: var(--warn); background: var(--warn-soft); }
+  .badge.completed { color: var(--ok); background: var(--ok-soft); }
+  .badge.failed { color: var(--err); background: var(--err-soft); }
+  .vtxt { margin: 8px 0; font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .vid video { width: 100%; max-height: 380px; border-radius: 10px; background: #000; display: block; }
+  .bar { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 6px; }
+  .bar::after { content: ""; display: block; width: 40%; height: 100%; background: var(--brand); animation: slide 1.4s ease-in-out infinite; }
+  @keyframes slide { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+  .vfoot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .vfoot a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  .verr { margin-top: 6px; font-size: 12px; color: var(--err); }
+  .vempty { text-align: center; padding: 28px 8px; color: var(--muted); font-size: 14px; }
+  .vempty span { display: block; font-size: 30px; margin-bottom: 6px; }
+
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line); }
+  .dock-in { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .sum { display: flex; gap: 22px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .sum b { display: block; font-size: 17px; color: var(--text); }
+  .sum .bad b { color: var(--err); }
+  .btn { padding: 12px 22px; border: 0; border-radius: 12px; background: var(--brand); color: var(--brand-text); font-weight: 700; cursor: pointer; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+
+  dialog { border: 1px solid var(--line); border-radius: 16px; padding: 24px; width: min(460px, calc(100vw - 32px)); background: var(--surface); color: var(--text); }
+  dialog::backdrop { background: rgba(10,12,18,.55); }
+  dialog h3 { margin: 0 0 4px; }
+  dialog label { display: block; margin: 14px 0 5px; font-size: 13px; font-weight: 600; }
+  dialog input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); }
+  dialog .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  dialog .acts { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  #toasts { position: fixed; top: 72px; right: 16px; z-index: 20; display: grid; gap: 8px; width: min(360px, calc(100vw - 32px)); }
+  .toast { padding: 12px 14px; border-radius: 12px; background: var(--text); color: var(--bg); font-size: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+  .toast.err { background: var(--err); color: #fff; }
+  .toast.ok { background: var(--ok); color: #fff; }
+  @media (prefers-color-scheme: dark) { .toast.ok, .toast.err { color: #0d0f14; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>Plataforma de Avatares</h1>
-  <div class="balance">Saldo: <span id="balance">…</span> créditos</div>
-</header>
-<main>
-  <section>
-    <h2>Meus avatares</h2>
-    <div id="avatars" class="avatars"></div>
-    <details style="margin-top:16px">
-      <summary>Vincular avatar do HeyGen</summary>
-      <div class="row">
-        <div><label>heygen_avatar_id</label><input id="rId" placeholder="ID do avatar no HeyGen"></div>
-        <div><label>Nome</label><input id="rName" placeholder="Ex.: Daniel Comercial"></div>
-      </div>
-      <p><button id="rBtn" class="ghost">Vincular</button></p>
-    </details>
-  </section>
 
-  <section>
-    <h2>Gerar vídeo</h2>
-    <div class="row">
-      <div><label>Avatar</label><select id="gAvatar"></select></div>
-      <div><label>Formato</label>
-        <select id="gRatio"><option value="9:16">9:16 (vertical)</option><option value="16:9">16:9 (horizontal)</option></select>
+<header class="topbar"><div class="topbar-in">
+  <div class="brand"><div class="logo">🎬</div>Studio de Avatares</div>
+  <div class="pill">Saldo <b id="balance">…</b> créditos</div>
+</div></header>
+
+<div class="wrap">
+  <div>
+    <section class="card">
+      <h2 class="step"><i>1</i>Escolha o avatar</h2>
+      <p class="sub">Quem vai apresentar o vídeo.</p>
+      <div id="avatars" class="avatars" role="radiogroup" aria-label="Avatar"></div>
+    </section>
+
+    <section class="card">
+      <h2 class="step"><i>2</i>Escreva o roteiro</h2>
+      <p class="sub">Gancho → conteúdo → CTA. Até 150 palavras cabem em 1 minuto.</p>
+      <textarea id="script" placeholder="Se eu tivesse que começar hoje, eu faria três coisas…"></textarea>
+      <div class="meter" id="meter"><div></div></div>
+      <div class="stats"><span id="stat"><b>0</b> palavras · ~0s</span><span id="tier"></span></div>
+      <div class="chips">
+        <button class="chip" data-limit="150" type="button">Curto · até 1 min</button>
+        <button class="chip" data-clear type="button">Limpar</button>
       </div>
+    </section>
+
+    <section class="card">
+      <h2 class="step"><i>3</i>Formato</h2>
+      <p class="sub">Onde o vídeo vai ser publicado.</p>
+      <div class="seg" role="radiogroup" aria-label="Formato">
+        <button class="opt" role="radio" aria-checked="true" data-ratio="9:16" type="button">
+          <span class="shape" style="width:18px;height:30px"></span><span><strong>Vertical 9:16</strong><small>Reels, Shorts, TikTok</small></span>
+        </button>
+        <button class="opt" role="radio" aria-checked="false" data-ratio="16:9" type="button">
+          <span class="shape" style="width:32px;height:19px"></span><span><strong>Horizontal 16:9</strong><small>YouTube, sites</small></span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <aside>
+    <section class="card">
+      <h2 class="step" style="margin-bottom:14px">Seus vídeos</h2>
+      <div id="videos" class="vlist"></div>
+    </section>
+  </aside>
+</div>
+
+<div class="dock"><div class="dock-in">
+  <div class="sum">
+    <div><span>Custo</span><b id="sCost">—</b></div>
+    <div id="sAfterBox"><span>Saldo depois</span><b id="sAfter">—</b></div>
+  </div>
+  <button id="go" class="btn" type="button" disabled>Gerar vídeo</button>
+</div></div>
+
+<dialog id="dlg">
+  <form method="dialog" id="addForm">
+    <h3>Adicionar avatar</h3>
+    <div class="hint">Vincula um avatar que já existe na sua conta HeyGen. Não gasta créditos.</div>
+    <label for="fName">Nome</label>
+    <input id="fName" placeholder="Ex.: Daniel Comercial" required autocomplete="off">
+    <label for="fId">ID do avatar no HeyGen</label>
+    <input id="fId" placeholder="beb7ebd45e5141ff…" required autocomplete="off" spellcheck="false">
+    <div class="acts">
+      <button class="btn ghost" value="cancel" formnovalidate type="submit">Cancelar</button>
+      <button class="btn" id="fOk" value="ok" type="submit">Adicionar</button>
     </div>
-    <label>Roteiro</label>
-    <textarea id="gScript" placeholder="Cole o roteiro aqui (gancho → conteúdo → CTA)"></textarea>
-    <div class="hint"><span id="gInfo">0 palavras</span><span id="gCost"></span></div>
-    <p><button id="gBtn">Gerar vídeo</button></p>
-    <div id="msg"></div>
-  </section>
-
-  <section>
-    <h2>Vídeos</h2>
-    <div id="videos"><p class="muted">Os vídeos gerados nesta sessão aparecem aqui.</p></div>
-  </section>
-</main>
+  </form>
+</dialog>
+<div id="toasts" aria-live="polite"></div>
 
 <script>
-const $ = (id) => document.getElementById(id);
-const STORE = "avatar-videos";
-let videos = [];
-try { videos = JSON.parse(localStorage.getItem(STORE) || "[]"); } catch {}
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const state = { balance: null, avatars: [], avatar: store.get("avatar", null), ratio: store.get("ratio", "9:16"), busy: false };
+let videos = store.get("videos", []);
 
 async function api(fn, body = {}) {
   const r = await fetch(`/api/${fn}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const data = await r.json().catch(() => ({}));
-  return { ok: r.ok, status: r.status, data };
+  return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) };
 }
-function say(text, kind = "") { const m = $("msg"); m.textContent = text; m.className = kind; }
-function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-
-async function loadAvatars() {
-  const { ok, data } = await api("list-avatars");
-  if (!ok) { $("balance").textContent = "erro"; return; }
-  $("balance").textContent = data.credits_balance;
-  const list = data.avatars || [];
-  $("avatars").innerHTML = list.length
-    ? list.map((a) => `<div class="avatar"><div class="thumb">${a.preview_image_url ? `<img src="${esc(a.preview_image_url)}" alt="">` : "🙂"}</div>
-        <strong>${esc(a.name)}</strong><div class="muted">${a.visibility === "private" ? "Privado" : "Equipe"}</div></div>`).join("")
-    : `<p class="muted">Nenhum avatar vinculado ainda. Use “Vincular avatar do HeyGen”.</p>`;
-  $("gAvatar").innerHTML = list.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join("");
-  $("gBtn").disabled = !list.length;
+function toast(msg, kind = "") {
+  const t = document.createElement("div");
+  t.className = `toast ${kind}`; t.textContent = msg;
+  $("#toasts").append(t); setTimeout(() => t.remove(), 4500);
 }
 
-function updateCost() {
-  const words = $("gScript").value.trim().split(/\s+/).filter(Boolean).length;
+/* ---------- custo (mesma regra do backend) ---------- */
+function calc(script) {
+  const words = script.trim().split(/\s+/).filter(Boolean).length;
   const sec = Math.ceil(words / 2.5);
-  const cost = sec <= 30 ? 80 : sec <= 60 ? 150 : 150 + Math.ceil((sec - 60) / 60) * 150;
-  $("gInfo").textContent = `${words} palavras · ~${sec}s`;
-  $("gCost").textContent = words ? `Custo estimado: ${cost} créditos` : "";
+  const cost = !words ? 0 : sec <= 30 ? 80 : sec <= 60 ? 150 : 150 + Math.ceil((sec - 60) / 60) * 150;
+  return { words, sec, cost };
 }
-$("gScript").addEventListener("input", updateCost);
 
-$("rBtn").onclick = async () => {
-  const heygen_avatar_id = $("rId").value.trim(), name = $("rName").value.trim();
-  if (!heygen_avatar_id || !name) return;
-  const { ok, data } = await api("register-avatar", { heygen_avatar_id, name });
-  if (!ok) return alert(data.error || "Erro ao vincular");
-  $("rId").value = $("rName").value = "";
-  loadAvatars();
+/* ---------- avatares ---------- */
+function renderAvatars() {
+  const cards = state.avatars.map((a) => `
+    <button class="av" role="radio" aria-checked="${a.id === state.avatar}" data-id="${a.id}" type="button">
+      <span class="tick">✓</span>
+      <div class="ph">${a.preview_image_url ? `<img src="${esc(a.preview_image_url)}" alt="">` : "🙂"}</div>
+      <div class="nm" title="${esc(a.name)}">${esc(a.name)}</div>
+    </button>`).join("");
+  $("#avatars").innerHTML = cards +
+    `<button class="add" id="addBtn" type="button"><span>+</span>Adicionar avatar</button>` +
+    (state.avatars.length ? "" : `<p class="empty">Você ainda não tem avatares. Adicione o primeiro para começar.</p>`);
+}
+$("#avatars").addEventListener("click", (e) => {
+  if (e.target.closest("#addBtn")) return $("#dlg").showModal();
+  const c = e.target.closest(".av"); if (!c) return;
+  state.avatar = c.dataset.id; store.set("avatar", state.avatar); renderAvatars(); refresh();
+});
+
+async function load() {
+  const { ok, data } = await api("list-avatars");
+  if (!ok) { $("#balance").textContent = "!"; return toast("Não consegui carregar seus dados.", "err"); }
+  state.balance = data.credits_balance; state.avatars = data.avatars || [];
+  if (!state.avatars.some((a) => a.id === state.avatar)) state.avatar = state.avatars[0]?.id ?? null;
+  $("#balance").textContent = state.balance;
+  renderAvatars(); refresh();
+}
+
+$("#addForm").addEventListener("submit", async (e) => {
+  if (e.submitter?.value !== "ok") return;
+  e.preventDefault();
+  const name = $("#fName").value.trim(), heygen_avatar_id = $("#fId").value.trim();
+  if (!name || !heygen_avatar_id) return;
+  $("#fOk").disabled = true;
+  const { ok, status, data } = await api("register-avatar", { name, heygen_avatar_id });
+  $("#fOk").disabled = false;
+  if (!ok) return toast(status === 409 ? "Esse avatar já foi adicionado." : (data.error || "Erro ao adicionar."), "err");
+  $("#dlg").close(); $("#addForm").reset();
+  state.avatar = data.avatar.id; store.set("avatar", state.avatar);
+  toast(`Avatar “${name}” adicionado.`, "ok"); load();
+});
+
+/* ---------- roteiro, formato, resumo ---------- */
+$("#script").value = store.get("draft", "");
+$("#script").addEventListener("input", () => { store.set("draft", $("#script").value); refresh(); });
+document.querySelector("[data-clear]").onclick = () => { $("#script").value = ""; store.set("draft", ""); refresh(); };
+document.querySelector("[data-limit]").onclick = () => toast("Mire em 140–150 palavras para caber em 1 minuto.");
+
+document.querySelectorAll("[data-ratio]").forEach((b) => b.addEventListener("click", () => {
+  state.ratio = b.dataset.ratio; store.set("ratio", state.ratio); refresh();
+}));
+
+function refresh() {
+  const { words, sec, cost } = calc($("#script").value);
+  $("#stat").innerHTML = `<b>${words}</b> palavras · ~${sec}s`;
+  $("#meter").classList.toggle("over", sec > 60);
+  $("#meter > div").style.width = Math.min(100, (sec / 60) * 100) + "%";
+  $("#tier").textContent = !words ? "" : sec <= 30 ? "Vídeo até 30s" : sec <= 60 ? "Vídeo até 60s" : "Passa de 1 minuto";
+  document.querySelectorAll("[data-ratio]").forEach((b) => b.setAttribute("aria-checked", b.dataset.ratio === state.ratio));
+
+  const after = state.balance == null ? null : state.balance - cost;
+  $("#sCost").textContent = cost ? `${cost} créditos` : "—";
+  $("#sAfter").textContent = !cost || after == null ? "—" : after;
+  $("#sAfterBox").classList.toggle("bad", after != null && after < 0);
+  const missing = !state.avatar ? "Escolha um avatar" : !words ? "Escreva o roteiro" : after < 0 ? "Créditos insuficientes" : "";
+  const btn = $("#go");
+  btn.disabled = !!missing || state.busy;
+  btn.textContent = state.busy ? "Enviando…" : (missing || "Gerar vídeo");
+}
+
+$("#go").onclick = async () => {
+  state.busy = true; refresh();
+  const script = $("#script").value.trim();
+  const { ok, status, data } = await api("generate-video", { avatar_id: state.avatar, script, ratio: state.ratio });
+  state.busy = false;
+  if (!ok) { refresh(); return toast(status === 402 ? "Créditos insuficientes." : (data.error || "Erro ao gerar vídeo."), "err"); }
+  state.balance = data.credits_balance; $("#balance").textContent = state.balance;
+  const av = state.avatars.find((a) => a.id === state.avatar);
+  videos.unshift({ id: data.video_id, script, avatar: av?.name || "", ratio: state.ratio, cost: data.cost, status: "processing", created: Date.now() });
+  store.set("videos", videos.slice(0, 30));
+  toast("Vídeo enviado! Ele aparece ao lado quando ficar pronto.", "ok");
+  renderVideos(); refresh();
 };
 
-$("gBtn").onclick = async () => {
-  const script = $("gScript").value.trim();
-  if (!script) return say("Escreva o roteiro.", "err");
-  $("gBtn").disabled = true; say("Enviando…");
-  const { ok, status, data } = await api("generate-video", { avatar_id: $("gAvatar").value, script, ratio: $("gRatio").value });
-  $("gBtn").disabled = false;
-  if (!ok) return say(status === 402 ? `Créditos insuficientes (custo ${data.cost}).` : (data.error || "Erro ao gerar"), "err");
-  say(`Vídeo enviado. Custo: ${data.cost} créditos.`, "ok");
-  $("balance").textContent = data.credits_balance;
-  videos.unshift({ id: data.video_id, script, status: "processing", created: Date.now() });
-  persist(); renderVideos();
-};
-
-function persist() { try { localStorage.setItem(STORE, JSON.stringify(videos.slice(0, 30))); } catch {} }
-
+/* ---------- vídeos ---------- */
 function renderVideos() {
-  if (!videos.length) return;
-  $("videos").innerHTML = videos.map((v) => `<div class="video">
-    <div class="script">${esc(v.script)}</div>
-    <span class="badge ${v.status}">${{ processing: "Renderizando", completed: "Pronto", failed: "Falhou" }[v.status] || v.status}</span>
-    ${v.video_url ? `<video src="${esc(v.video_url)}" controls playsinline></video>` : ""}
-    ${v.error_message ? `<div class="muted" style="grid-column:1/-1">${esc(v.error_message)}</div>` : ""}
-  </div>`).join("");
+  if (!videos.length) {
+    $("#videos").innerHTML = `<div class="vempty"><span>🎥</span>Seus vídeos vão aparecer aqui.<br>Escolha um avatar, escreva o roteiro e clique em Gerar.</div>`;
+    return;
+  }
+  const label = { processing: "Renderizando…", completed: "Pronto", failed: "Falhou" };
+  $("#videos").innerHTML = videos.map((v) => `
+    <article class="vid">
+      <div class="vhead"><strong>${esc(v.avatar || "Vídeo")}</strong><span class="badge ${v.status}">${label[v.status] || v.status}</span></div>
+      <div class="vtxt">${esc(v.script)}</div>
+      ${v.status === "processing" ? `<div class="bar"></div><div class="vfoot"><span>Costuma levar 2–5 minutos</span></div>` : ""}
+      ${v.video_url ? `<video src="${esc(v.video_url)}" controls playsinline preload="metadata"></video>
+        <div class="vfoot"><span>${esc(v.ratio)} · ${v.cost} créditos</span><a href="${esc(v.video_url)}" target="_blank" rel="noopener">Abrir / baixar ↗</a></div>` : ""}
+      ${v.status === "failed" ? `<div class="verr">${esc(v.error_message || "A renderização falhou.")} Os créditos foram devolvidos.</div>` : ""}
+    </article>`).join("");
 }
 
-async function pollVideos() {
+async function poll() {
   let changed = false;
   for (const v of videos.filter((x) => x.status === "processing")) {
     const { ok, data } = await api("get-video-status", { video_id: v.id });
     if (ok && data.video && data.video.status !== v.status) {
       Object.assign(v, { status: data.video.status, video_url: data.video.video_url, error_message: data.video.error_message });
       changed = true;
+      if (v.status === "completed") toast("Um vídeo ficou pronto! 🎉", "ok");
     }
   }
-  if (changed) { persist(); renderVideos(); loadAvatars(); }
+  if (changed) { store.set("videos", videos); renderVideos(); load(); }
 }
 
-loadAvatars(); renderVideos(); pollVideos();
-setInterval(pollVideos, 10000);
+renderVideos(); refresh(); load(); poll(); setInterval(poll, 10000);
 </script>
 </body>
 </html>
