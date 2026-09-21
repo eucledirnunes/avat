@@ -1,4 +1,4 @@
-# Plataforma de avatares (HeyGen como motor)
+# Plataforma de avatares 
 
 Backend multi-tenant em Supabase. O HeyGen só recebe ordens do backend; o navegador nunca vê
 `heygen_avatar_id`, `heygen_video_id` nem a API key.
